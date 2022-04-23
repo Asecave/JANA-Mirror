@@ -21,17 +21,21 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	private JFrame frame;
 	private JanaMirror jana;
 
-	private float progressBarValue = 0.75f;
+	private float progressBarValue = 0f;
+	private float progressBar2Value = 0f;
 	private float smoothProgressBarValue = 0f;
-	private String[] lines = new String[10];
-	private String sourceDir = "a";
-	private String targetDir = "a";
+	private float smoothProgressBar2Value = 0f;
+	private float opacity = 0f;
+	private String sourceDir = "";
+	private String targetDir = "";
+	private String speed = "";
 	private boolean overSourceButton;
 	private boolean overTargetButton;
 	private boolean overChangeSourceButton;
 	private boolean overChangeTargetButton;
 	private boolean suspendClose;
 	private boolean overSyncButton;
+	private boolean overSpeedButton;
 
 	public Window(JanaMirror jana) {
 
@@ -86,30 +90,37 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 			div = 4;
 		}
 		smoothProgressBarValue += (progressBarValue - smoothProgressBarValue) / div;
-
+		div = 20;
+		if (progressBar2Value == 1f) {
+			div = 4;
+		}
+		smoothProgressBar2Value += (progressBar2Value - smoothProgressBar2Value) / div;
+		
+		if ((smoothProgressBarValue != 0f || smoothProgressBar2Value != 0f) && progressBarValue != 1f) {
+			opacity += (1f - opacity) / 10;
+		} else {
+			opacity -=  opacity / 20;
+		}
+		
 		// Mouse
 		Point mouse = frame.getMousePosition();
 
 		// Graphics
 		Graphics2D g2d = (Graphics2D) g;
 
+		// Font
+		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2d.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+
 		// Background
-		g2d.setColor(new Color(30, 30, 30));
+		Color bg = new Color(30, 30, 30);
+		g2d.setColor(bg);
 		g2d.fillRect(0, 0, frame.getWidth(), frame.getHeight());
 
 		// Progressbar
-		g2d.setColor(Color.MAGENTA);
-		g2d.fillRect(0, 0, (int) (smoothProgressBarValue * frame.getWidth()), 4);
-
-		// Event logger
-		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2d.setColor(Color.LIGHT_GRAY);
-		g2d.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-		for (int i = 0; i < lines.length; i++) {
-			if (lines[i] != null) {
-				g2d.drawString(lines[i], 5, frame.getHeight() - 5 - i * 15);
-			}
-		}
+		g2d.setColor(new Color(Color.MAGENTA.getRed(), Color.MAGENTA.getGreen(), Color.MAGENTA.getBlue(), (int) (255 * opacity)));
+		g2d.fillRect(0, 1, (int) (smoothProgressBarValue * frame.getWidth()), 3);
+		g2d.fillRect(0, 4, (int) (smoothProgressBar2Value * frame.getWidth()), 3);
 
 		// Open directories buttons
 		if (mouse != null && mouse.x > 75 && mouse.x < 275 && mouse.y > 75 && mouse.y < 175) {
@@ -166,6 +177,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		g2d.drawString("Change target directory", 425 - g2d.getFontMetrics().stringWidth("Change target directory") / 2,
 				230);
 
+		// Synchronize now button
 		if (mouse != null && mouse.x > 75 && mouse.x < 525 && mouse.y > 275 && mouse.y < 325) {
 			g2d.setColor(new Color(80, 80, 80));
 			overSyncButton = true;
@@ -177,24 +189,35 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		g2d.setColor(Color.MAGENTA);
 		g2d.drawRect(75, 275, 450, 50);
 		g2d.setColor(Color.LIGHT_GRAY);
-		g2d.drawString("Synchronise now", 300 - g2d.getFontMetrics().stringWidth("Synchronise now") / 2, 305);
+		g2d.drawString("Synchronize now", 300 - g2d.getFontMetrics().stringWidth("Synchronize now") / 2, 305);
 
+		// Sync speed button
+		if (mouse != null && mouse.x > 75 && mouse.x < 525 && mouse.y > 350 && mouse.y < 400) {
+			g2d.setColor(new Color(80, 80, 80));
+			overSpeedButton = true;
+		} else {
+			g2d.setColor(new Color(40, 40, 40));
+			overSpeedButton = false;
+		}
+		g2d.fillRect(75, 350, 450, 50);
+		g2d.setColor(Color.MAGENTA);
+		g2d.drawRect(75, 350, 450, 50);
+		g2d.setColor(Color.LIGHT_GRAY);
+		g2d.drawString(speed, 300 - g2d.getFontMetrics().stringWidth(speed) / 2, 380);
+		
 		// Border
 		g2d.setColor(new Color(100, 100, 100));
 		g2d.drawRect(0, 0, frame.getWidth() - 1, frame.getHeight() - 1);
 	}
 
 	public void setProgress(float value) {
-
+		
 		progressBarValue = value;
 	}
+	
+	public void setProgress2(float value) {
 
-	public void append(String s) {
-
-		for (int i = lines.length - 2; i >= 0; i--) {
-			lines[i + 1] = lines[i];
-		}
-		lines[0] = s;
+		progressBar2Value = value;
 	}
 
 	public void setSourceDirButtonName(String name) {
@@ -225,6 +248,8 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 			jana.changeTargetButtonPressed();
 		} else if (overSyncButton) {
 			jana.syncButtonPressed();
+		} else if (overSpeedButton) {
+			jana.speedButtonPressed(e.getButton() == MouseEvent.BUTTON3);
 		}
 	}
 
@@ -246,5 +271,9 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	public void setSuspendClose(boolean suspendClose) {
 
 		this.suspendClose = suspendClose;
+	}
+	
+	public void setSpeedButtonName(String speed) {
+		this.speed = speed;
 	}
 }

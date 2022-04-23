@@ -26,6 +26,7 @@ public class Config {
 			jana.log("Failed. Creating new config file...");
 			prop.setProperty("sourceDir", thisPath);
 			prop.setProperty("targetDir", thisPath);
+			prop.setProperty("syncSpeed", "3");
 			save();
 			jana.log("Success");
 		}
@@ -37,9 +38,10 @@ public class Config {
 	
 	public void set(String key, String value) {
 		prop.setProperty(key, value);
+		save();
 	}
 	
-	public void save() {
+	private void save() {
 		try {
 			prop.store(new FileOutputStream("config.properties"), null);
 		} catch (IOException e) {

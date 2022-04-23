@@ -13,6 +13,8 @@ public class JanaMirror {
 	private Window window;
 	private Config config;
 	private Robocopy robocopy;
+	
+	private long lastSynced;
 
 	public static void main(String[] args) {
 
@@ -27,8 +29,13 @@ public class JanaMirror {
 
 		window.setSourceDirButtonName(new File(config.get("sourceDir")).getName());
 		window.setTargetDirButtonName(new File(config.get("targetDir")).getName());
+		window.setSpeedButtonName(speedToString(Integer.parseInt(config.get("syncSpeed"))));
 
 		robocopy = new Robocopy(this);
+		
+		lastSynced = System.currentTimeMillis();
+		robocopy.startMirror(true);
+		
 	}
 
 	public void sourceButtonPressed() {
@@ -36,8 +43,8 @@ public class JanaMirror {
 		window.setSuspendClose(true);
 		try {
 			Desktop.getDesktop().open(new File(config.get("sourceDir")));
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException | IllegalArgumentException e) {
+			log("Folder does not exist!");
 		}
 		new Thread(() -> {
 			try {
@@ -54,8 +61,8 @@ public class JanaMirror {
 		window.setSuspendClose(true);
 		try {
 			Desktop.getDesktop().open(new File(config.get("targetDir")));
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException | IllegalArgumentException e) {
+			log("Folder does not exist!");
 		}
 		new Thread(() -> {
 			try {
@@ -73,7 +80,6 @@ public class JanaMirror {
 		String file = chooseFile(config.get("sourceDir"));
 		if (file != null) {
 			config.set("sourceDir", file);
-			config.save();
 			window.setSourceDirButtonName(new File(config.get("sourceDir")).getName());
 		}
 	}
@@ -84,16 +90,14 @@ public class JanaMirror {
 		String file = chooseFile(config.get("targetDir"));
 		if (file != null) {
 			config.set("targetDir", file);
-			config.save();
 			window.setTargetDirButtonName(new File(config.get("targetDir")).getName());
 		}
 	}
 
 	public void log(String s) {
 
-		System.out.println(s);
 		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-		window.append("[" + timeStamp + "] " + s);
+		System.out.println("[" + timeStamp + "] " + s);
 	}
 
 	private String chooseFile(String startDir) {
@@ -110,11 +114,60 @@ public class JanaMirror {
 
 	public void syncButtonPressed() {
 
-		robocopy.startMirror();
+		robocopy.startMirror(true);
+		lastSynced = System.currentTimeMillis();
 	}
 
 	public Config getConfig() {
 
 		return config;
+	}
+	
+	public void speedButtonPressed(boolean rightClick) {
+		int speed = Integer.parseInt(config.get("syncSpeed"));
+		if (rightClick) {
+			speed--;
+		} else {
+			speed++;
+		}
+		if (speed == 8) {
+			speed = 0;
+		}
+		if (speed == -1) {
+			speed = 7;
+		}
+		window.setSpeedButtonName(speedToString(speed));
+		config.set("syncSpeed", "" + speed);
+	}
+	
+	private String speedToString(int speed) {
+		return "Sync speed: " + getMinutesFromSpeed(speed) + " minutes";
+	}
+	
+	private int getMinutesFromSpeed(int speed) {
+		switch (speed) {
+		case 0:
+			return 1;
+		case 1:
+			return 2;
+		case 2:
+			return 5;
+		case 3:
+			return 10;
+		case 4:
+			return 15;
+		case 5:
+			return 30;
+		case 6:
+			return 45;
+		case 7:
+			return 60;
+		}
+		return -1;
+	}
+
+	public void setFileProgress(long transferredSize, long totalSize, int transferredFiles, int totalFiles) {
+		window.setProgress(transferredSize / (float) totalSize);
+		window.setProgress2(transferredFiles / (float) totalFiles);
 	}
 }
