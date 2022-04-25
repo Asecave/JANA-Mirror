@@ -56,15 +56,28 @@ public class Robocopy {
 				line = null;
 				long transferred = 0;
 				int transferredFiles = 0;
+				long currentFile = 0;
+				long currentTransferred = 0;
+				long prev = 0;
 				while ((line = br.readLine()) != null) {
 					jana.log(line);
 					line = line.trim();
 					String[] parts = line.split("\t");
-					if (parts.length == 2) {
-						transferred += Long.parseLong(parts[0]);
-						transferredFiles++;
-					} else if (parts.length == 3 && !parts[0].endsWith("%")) {
-						transferred += Long.parseLong(parts[1]);
+					if (parts.length == 1 && parts[0].endsWith("%")) {
+						float num = Float.parseFloat(parts[0].substring(0, parts[0].length() - 1));
+						if (num == 100f) {
+							transferred -= currentTransferred;
+							transferred += currentFile;
+							currentTransferred = 0;
+							prev = 0;
+						} else {
+							long n = (long) (currentFile * (num / 100f));
+							transferred += n - prev;
+							currentTransferred += n - prev;
+							prev = n;
+						}
+					} else if (parts.length == 2) {
+						currentFile = Long.parseLong(parts[0]);
 						transferredFiles++;
 						jana.setCurrentFile(parts[1]);
 					}
