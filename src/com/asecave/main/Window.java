@@ -41,6 +41,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	private String status = "";
 	private Color statusColor = Color.GREEN;
 	private boolean drawLoopEnabled = true;
+	private String currentFile = "";
 
 	public Window(JanaMirror jana) {
 
@@ -220,18 +221,26 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		g2d.setColor(statusColor);
 		g2d.drawString(status, 300 - g2d.getFontMetrics().stringWidth(status) / 2, 440);
 		
+		// Current file
+		g2d.setColor(Color.LIGHT_GRAY);
+		g2d.drawString(currentFile, 10, 25);
+		
 		// Border
 		g2d.setColor(new Color(100, 100, 100));
 		g2d.drawRect(0, 0, frame.getWidth() - 1, frame.getHeight() - 1);
 	}
 
 	public void setProgress(float value) {
-		
+		if (value == 0f) {
+			smoothProgressBarValue = 0f;
+		}
 		progressBarValue = value;
 	}
 	
 	public void setProgress2(float value) {
-
+		if (value == 0f) {
+			smoothProgressBar2Value = 0f;
+		}
 		progressBar2Value = value;
 	}
 
@@ -304,5 +313,9 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 
 	public void showWindow() {
 		frame.setVisible(true);
+	}
+	
+	public void setCurrentFile(String file) {
+		currentFile = file;
 	}
 }

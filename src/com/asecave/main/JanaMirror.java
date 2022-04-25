@@ -209,4 +209,8 @@ public class JanaMirror {
 	public void setIcon(int n) {
 		tray.setIcon(n);
 	}
+	
+	public void setCurrentFile(String file) {
+		window.setCurrentFile(file);
+	}
 }

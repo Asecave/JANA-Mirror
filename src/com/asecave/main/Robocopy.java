@@ -66,6 +66,7 @@ public class Robocopy {
 					} else if (parts.length == 3 && !parts[0].endsWith("%")) {
 						transferred += Long.parseLong(parts[1]);
 						transferredFiles++;
+						jana.setCurrentFile(parts[1]);
 					}
 					jana.setFileProgress(transferred, totalSize, transferredFiles, totalFiles);
 				}
@@ -74,6 +75,7 @@ public class Robocopy {
 			}
 			jana.setStatus("Synchronization finished", Color.GREEN);
 			jana.setIcon(0);
+			jana.setCurrentFile("");
 			ready = true;
 		};
 		ready = true;
