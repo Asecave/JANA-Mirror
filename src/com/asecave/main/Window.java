@@ -36,6 +36,8 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	private boolean suspendClose;
 	private boolean overSyncButton;
 	private boolean overSpeedButton;
+	private String status = "";
+	private Color statusColor = Color.GREEN;
 
 	public Window(JanaMirror jana) {
 
@@ -47,7 +49,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		frame.addMouseListener(this);
 
 		frame.setUndecorated(true);
-		frame.setSize(600, 500);
+		frame.setSize(600, 475);
 		frame.setLocationRelativeTo(null);
 
 		frame.add(this);
@@ -205,6 +207,10 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		g2d.setColor(Color.LIGHT_GRAY);
 		g2d.drawString(speed, 300 - g2d.getFontMetrics().stringWidth(speed) / 2, 380);
 		
+		// Status
+		g2d.setColor(statusColor);
+		g2d.drawString(status, 300 - g2d.getFontMetrics().stringWidth(status) / 2, 440);
+		
 		// Border
 		g2d.setColor(new Color(100, 100, 100));
 		g2d.drawRect(0, 0, frame.getWidth() - 1, frame.getHeight() - 1);
@@ -275,5 +281,10 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	
 	public void setSpeedButtonName(String speed) {
 		this.speed = speed;
+	}
+	
+	public void setStatus(String status, Color color) {
+		this.statusColor = color;
+		this.status = status;
 	}
 }

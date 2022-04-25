@@ -1,22 +1,30 @@
 package com.asecave.main;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 
 public class Robocopy {
-	
+
+	private JanaMirror jana;
+
 	private Runnable runnable;
 	private boolean fastSync;
+	private boolean ready;
 
 	public Robocopy(JanaMirror jana) {
-		
+
+		this.jana = jana;
+
 		runnable = () -> {
 			String sourceDir = jana.getConfig().get("sourceDir");
 			String targetDir = jana.getConfig().get("targetDir");
-			String listCommand = "cmd /c robocopy.exe \"" + sourceDir + "\" \"" + targetDir + "\" /MIR /NJH /NJS /NP /NC /NDL /BYTES /L";
-			String mirCommand = "cmd /c robocopy.exe \"" + sourceDir + "\" \"" + targetDir + "\" /MIR /NJH /NJS /NC /NDL /BYTES " + (fastSync ? "" : "/IPG:1");
+			String listCommand = "cmd /c robocopy.exe \"" + sourceDir + "\" \"" + targetDir
+					+ "\" /MIR /NJH /NJS /NP /NC /NDL /BYTES /L";
+			String mirCommand = "cmd /c robocopy.exe \"" + sourceDir + "\" \"" + targetDir
+					+ "\" /MIR /NJH /NJS /NC /NDL /BYTES " + (fastSync ? "" : "/IPG:1");
 			jana.log("Mirror command: " + mirCommand);
 			try {
 				Process p = Runtime.getRuntime().exec(listCommand);
@@ -34,6 +42,8 @@ public class Robocopy {
 				}
 				if (totalSize == 0) {
 					jana.log("No changes found");
+					jana.setStatus("No changes found", Color.GREEN);
+					ready = true;
 					return;
 				}
 				DecimalFormat df = new DecimalFormat("###,###,###");
@@ -59,13 +69,23 @@ public class Robocopy {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			jana.setStatus("Synchronization finished", Color.GREEN);
+			ready = true;
 		};
+		ready = true;
 	}
 
 	public void startMirror(boolean fastSync) {
 
-		this.fastSync = fastSync;
-		
-		new Thread(runnable).start();
+		if (ready) {
+			jana.log("Synchronizing...");
+			jana.setStatus("Synchronizing", Color.MAGENTA);
+			ready = false;
+			this.fastSync = fastSync;
+			new Thread(runnable).start();
+		} else {
+			jana.log("Not ready to sync");
+			jana.setStatus("Not ready to sync", Color.RED);
+		}
 	}
 }

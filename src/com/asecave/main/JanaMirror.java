@@ -1,5 +1,6 @@
 package com.asecave.main;
 
+import java.awt.Color;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +14,7 @@ public class JanaMirror {
 	private Window window;
 	private Config config;
 	private Robocopy robocopy;
-	
+
 	private long lastSynced;
 
 	public static void main(String[] args) {
@@ -32,10 +33,23 @@ public class JanaMirror {
 		window.setSpeedButtonName(speedToString(Integer.parseInt(config.get("syncSpeed"))));
 
 		robocopy = new Robocopy(this);
-		
+
 		lastSynced = System.currentTimeMillis();
 		robocopy.startMirror(true);
-		
+
+		new Thread(() -> {
+			while (true) {
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (System.currentTimeMillis() - lastSynced >= getMinutesFromSpeed(Integer.parseInt(config.get("syncSpeed"))) * 60000) {
+					lastSynced = System.currentTimeMillis();
+					robocopy.startMirror(false);
+				}
+			}
+		}).start();
 	}
 
 	public void sourceButtonPressed() {
@@ -45,6 +59,7 @@ public class JanaMirror {
 			Desktop.getDesktop().open(new File(config.get("sourceDir")));
 		} catch (IOException | IllegalArgumentException e) {
 			log("Folder does not exist!");
+			setStatus("Folder does not exist!", Color.RED);
 		}
 		new Thread(() -> {
 			try {
@@ -63,6 +78,7 @@ public class JanaMirror {
 			Desktop.getDesktop().open(new File(config.get("targetDir")));
 		} catch (IOException | IllegalArgumentException e) {
 			log("Folder does not exist!");
+			setStatus("Folder does not exist!", Color.RED);
 		}
 		new Thread(() -> {
 			try {
@@ -122,7 +138,7 @@ public class JanaMirror {
 
 		return config;
 	}
-	
+
 	public void speedButtonPressed(boolean rightClick) {
 		int speed = Integer.parseInt(config.get("syncSpeed"));
 		if (rightClick) {
@@ -139,11 +155,11 @@ public class JanaMirror {
 		window.setSpeedButtonName(speedToString(speed));
 		config.set("syncSpeed", "" + speed);
 	}
-	
+
 	private String speedToString(int speed) {
 		return "Sync speed: " + getMinutesFromSpeed(speed) + " minutes";
 	}
-	
+
 	private int getMinutesFromSpeed(int speed) {
 		switch (speed) {
 		case 0:
@@ -169,5 +185,9 @@ public class JanaMirror {
 	public void setFileProgress(long transferredSize, long totalSize, int transferredFiles, int totalFiles) {
 		window.setProgress(transferredSize / (float) totalSize);
 		window.setProgress2(transferredFiles / (float) totalFiles);
+	}
+	
+	public void setStatus(String status, Color color) {
+		window.setStatus(status, color);
 	}
 }
