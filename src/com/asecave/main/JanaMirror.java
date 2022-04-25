@@ -21,12 +21,13 @@ public class JanaMirror {
 
 	public static void main(String[] args) {
 
-		new JanaMirror();
+		boolean silent = args.length == 1;
+		new JanaMirror(silent);
 	}
 
-	public JanaMirror() {
+	public JanaMirror(boolean silent) {
 
-		window = new Window(this);
+		window = new Window(this, silent);
 
 		config = new Config(this);
 

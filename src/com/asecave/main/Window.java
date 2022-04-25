@@ -43,7 +43,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	private boolean drawLoopEnabled = true;
 	private String currentFile = "";
 
-	public Window(JanaMirror jana) {
+	public Window(JanaMirror jana, boolean silent) {
 
 		this.jana = jana;
 
@@ -64,7 +64,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 			e1.printStackTrace();
 		}
 
-		frame.setVisible(true);
+		frame.setVisible(!silent);
 
 		new Thread(() -> {
 			while (drawLoopEnabled) {

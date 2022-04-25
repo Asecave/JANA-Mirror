@@ -12,11 +12,12 @@ public class Config {
 
 	public Config(JanaMirror jana) {
 		
-		String thisPath = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParent();
+		String thisPath = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParent().replaceAll("%20", " ");
 		
 		try {
-			jana.log("Loading config...");
-			prop.load(new FileInputStream(new File("config.properties")));
+			File f = new File("config.properties");
+			jana.log("Loading config from \"" + f.getAbsolutePath() + "\"...");
+			prop.load(new FileInputStream(f));
 			jana.log("Success");
 		} catch (IOException e) {
 			jana.log("Failed. Creating new config file...");
