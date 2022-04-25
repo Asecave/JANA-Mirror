@@ -10,7 +10,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -38,6 +40,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	private boolean overSpeedButton;
 	private String status = "";
 	private Color statusColor = Color.GREEN;
+	private boolean drawLoopEnabled = true;
 
 	public Window(JanaMirror jana) {
 
@@ -53,11 +56,17 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 		frame.setLocationRelativeTo(null);
 
 		frame.add(this);
+		
+		try {
+			frame.setIconImage(ImageIO.read(Window.class.getResourceAsStream("icon-24.png")));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 
 		frame.setVisible(true);
 
 		new Thread(() -> {
-			while (true) {
+			while (drawLoopEnabled) {
 				if (frame.isVisible()) {
 					Window.this.repaint();
 				}
@@ -67,7 +76,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		}, "draw loop").start();
 	}
 
 	@Override
@@ -79,7 +88,7 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	public void focusLost(FocusEvent e) {
 
 		if (!suspendClose) {
-			System.exit(0);
+			frame.setVisible(false);
 		}
 	}
 
@@ -286,5 +295,14 @@ public class Window extends JPanel implements FocusListener, MouseListener {
 	public void setStatus(String status, Color color) {
 		this.statusColor = color;
 		this.status = status;
+	}
+
+	public void dispose() {
+		drawLoopEnabled = false;
+		frame.dispose();
+	}
+
+	public void showWindow() {
+		frame.setVisible(true);
 	}
 }

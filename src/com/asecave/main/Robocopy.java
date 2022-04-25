@@ -13,6 +13,8 @@ public class Robocopy {
 	private Runnable runnable;
 	private boolean fastSync;
 	private boolean ready;
+	private Process p1;
+	private Process p2;
 
 	public Robocopy(JanaMirror jana) {
 
@@ -27,8 +29,8 @@ public class Robocopy {
 					+ "\" /MIR /NJH /NJS /NC /NDL /BYTES " + (fastSync ? "" : "/IPG:1");
 			jana.log("Mirror command: " + mirCommand);
 			try {
-				Process p = Runtime.getRuntime().exec(listCommand);
-				BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				p1 = Runtime.getRuntime().exec(listCommand);
+				BufferedReader br = new BufferedReader(new InputStreamReader(p1.getInputStream()));
 				String line = null;
 				long totalSize = 0;
 				int totalFiles = 0;
@@ -43,13 +45,14 @@ public class Robocopy {
 				if (totalSize == 0) {
 					jana.log("No changes found");
 					jana.setStatus("No changes found", Color.GREEN);
+					jana.setIcon(0);
 					ready = true;
 					return;
 				}
 				DecimalFormat df = new DecimalFormat("###,###,###");
 				jana.log("Found " + df.format(totalSize / 1000) + " KB of changed files");
-				p = Runtime.getRuntime().exec(mirCommand);
-				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				p2 = Runtime.getRuntime().exec(mirCommand);
+				br = new BufferedReader(new InputStreamReader(p2.getInputStream()));
 				line = null;
 				long transferred = 0;
 				int transferredFiles = 0;
@@ -70,6 +73,7 @@ public class Robocopy {
 				e.printStackTrace();
 			}
 			jana.setStatus("Synchronization finished", Color.GREEN);
+			jana.setIcon(0);
 			ready = true;
 		};
 		ready = true;
@@ -82,10 +86,20 @@ public class Robocopy {
 			jana.setStatus("Synchronizing", Color.MAGENTA);
 			ready = false;
 			this.fastSync = fastSync;
-			new Thread(runnable).start();
+			new Thread(runnable, "Sync").start();
+			jana.setIcon(1);
 		} else {
 			jana.log("Not ready to sync");
 			jana.setStatus("Not ready to sync", Color.RED);
+		}
+	}
+
+	public void stop() {
+		if (p1 != null) {
+			p1.destroy();
+		}
+		if (p2 != null) {
+			p2.destroy();
 		}
 	}
 }

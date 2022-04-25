@@ -14,8 +14,10 @@ public class JanaMirror {
 	private Window window;
 	private Config config;
 	private Robocopy robocopy;
+	private Tray tray;
 
 	private long lastSynced;
+	private boolean autoSync = true;
 
 	public static void main(String[] args) {
 
@@ -33,12 +35,14 @@ public class JanaMirror {
 		window.setSpeedButtonName(speedToString(Integer.parseInt(config.get("syncSpeed"))));
 
 		robocopy = new Robocopy(this);
+		
+		tray = new Tray(this);
 
 		lastSynced = System.currentTimeMillis();
 		robocopy.startMirror(true);
 
 		new Thread(() -> {
-			while (true) {
+			while (autoSync) {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
@@ -49,7 +53,7 @@ public class JanaMirror {
 					robocopy.startMirror(false);
 				}
 			}
-		}).start();
+		}, "Change checker").start();
 	}
 
 	public void sourceButtonPressed() {
@@ -68,7 +72,7 @@ public class JanaMirror {
 				e.printStackTrace();
 			}
 			window.setSuspendClose(false);
-		}).start();
+		}, "Suspend Close").start();
 	}
 
 	public void targetButtonPressed() {
@@ -87,7 +91,7 @@ public class JanaMirror {
 				e.printStackTrace();
 			}
 			window.setSuspendClose(false);
-		}).start();
+		}, "Suspend Close").start();
 	}
 
 	public void changeSourceButtonPressed() {
@@ -189,5 +193,20 @@ public class JanaMirror {
 	
 	public void setStatus(String status, Color color) {
 		window.setStatus(status, color);
+	}
+	
+	public void exit() {
+		autoSync = false;
+		robocopy.stop();
+		window.dispose();
+		tray.remove();
+	}
+	
+	public void trayClicked() {
+		window.showWindow();
+	}
+	
+	public void setIcon(int n) {
+		tray.setIcon(n);
 	}
 }

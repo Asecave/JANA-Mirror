@@ -8,13 +8,9 @@ import java.util.Properties;
 
 public class Config {
 	
-	private JanaMirror jana;
-	
 	Properties prop = new Properties();
 
 	public Config(JanaMirror jana) {
-		
-		this.jana = jana;
 		
 		String thisPath = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParent();
 		
